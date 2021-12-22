@@ -1,0 +1,78 @@
+<head> <link href="https://fonts.googleapis.com/css?family=Crimson+Text&display=swap" rel="stylesheet"> </head>
+
+<mat-toolbar color="primary">
+  <button mat-button href="/">
+    <mat-icon>home</mat-icon>
+    B+ Tree builder App
+  </button>
+
+  
+  <div fxLayout="row" fxShow="false" fxShow.gt-sm>
+    <div *ngIf="authService.isLoggedIn">
+      <button mat-button routerLink="/bplus-tree">
+        <mat-icon>device_hub</mat-icon>
+        B+ Tree builder</button>
+      <button mat-button routerLink="/bplus-tree/logs">
+        <mat-icon>format_list_bulleted</mat-icon>
+        Building process</button>
+      <button mat-button routerLink="admin" *ngIf="getRoleBoolean()">
+        <mat-icon>gavel</mat-icon>
+        Admin page</button>
+      <button mat-button (click)="logout()">
+        <mat-icon>account_circle</mat-icon>
+        Logout</button>
+    </div>
+    
+    <div *ngIf="!authService.isLoggedIn">
+      <button mat-button routerLink="/login">
+        <mat-icon>person</mat-icon>
+        Login</button>
+    </div>
+    <div *ngIf="!authService.isLoggedIn">
+      <button mat-button routerLink="/register">
+        <mat-icon>person_add</mat-icon>
+        Registration</button>
+    </div>
+  </div>
+  <button mat-icon-button [matMenuTriggerFor]="menu" fxHide="false" fxHide.gt-sm>
+    <mat-icon>menu</mat-icon>
+  </button>
+  
+  <span><div *ngIf="authService.isLoggedIn">
+    <button mat-button routerLink="/helper">
+      <mat-icon>search</mat-icon>
+    </button>
+  </div></span>
+
+</mat-toolbar>
+
+<mat-menu xPosition="before" #menu="matMenu">
+  <div *ngIf="authService.isLoggedIn">
+    <button mat-menu-item routerLink="/bplus-tree">
+      <mat-icon>device_hub</mat-icon>
+      B+ Tree builder</button>
+    <button mat-menu-item routerLink="/bplus-tree/logs">
+      <mat-icon>format_list_bulleted</mat-icon>
+      Building process</button>
+    <button mat-button routerLink="admin" *ngIf="getRoleBoolean()">
+      <mat-icon>gavel</mat-icon>
+      Admin page</button>
+    <button mat-menu-item (click)="logout()">
+        <mat-icon>account_circle</mat-icon>
+      Logout</button>
+  </div>
+  <div *ngIf="!authService.isLoggedIn">
+    <button mat-menu-item routerLink="/login">
+      <mat-icon>person</mat-icon>
+      Login</button>
+  </div>
+  <div *ngIf="!authService.isLoggedIn">
+    <button mat-menu-item routerLink="/register">
+      <mat-icon>person_add</mat-icon>
+      Registration</button>
+  </div>
+</mat-menu>
+
+<router-outlet></router-outlet>
+
+<script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>

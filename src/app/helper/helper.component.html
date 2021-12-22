@@ -1,0 +1,141 @@
+<div class="box">
+    
+    <h3 class="title">Mi az a B+ fa</h3>
+    <div class="text">
+        <p>
+            A B+ fa használata az adattárolás és módosítás egyik leghatékonyabb módja. 
+            A régebbi programok indexállományait, az adatbázisok adatait is B+ fákban tárolják, 
+            emellett több Linux verzió is alkalmazza a B+ fákat a fájlszerkezeteik tárolására.
+        </p>
+        <p>
+            Minden csúcs legfeljebb <i>d</i> mutatót <i>(4 ≤ d)</i>, és legfeljebb <i>d-1</i> kulcsot tartalmaz, 
+            ahol <i>d</i> a fára jellemző állandó, a B+ fa fokszáma. Úgy tekintjük, hogy a belső csúcsokban mindegyik referencia két kulcs "között" van, 
+            azaz egy olyan részfa gyökerére mutat, amiben minden érték a két kulcs között található 
+            (mindegyik csúcshoz hozzáképzelve balról egy "mínusz végtelen", jobbról egy "plusz végtelen" értékű kulcsot).
+        </p>
+        <p>
+            Az adatok a levélszinten vannak. A belső kulcsok csak hasító kulcsok. Egy adott kulcsú adat keresése során ezek alapján tudhatjuk, 
+            melyik ágon keressünk tovább. A levélszinten minden kulcshoz tartozik egy mutató, ami a megfelelő adatrekordra hivatkozik. 
+            (A leveleket a d-edik mutatókkal gyakran listába fűzik.) A B+ fák esetében megköveteljük, hogy a gyökércsúcstól mindegyik levél azonos távolságra legyen. 
+            Így a fenti ábrán látható fában tárolt 11 kulcs bármelyikére rákeresve 
+            (amelyek mindegyikét a legalsó, a levél szinten találjuk: a belső csúcsok kulcsai csak a tájékozódást szolgálják), 
+            három csúcsot érintünk (a gyökércsúcsot, egyik középső szintű csúcsot, és az egyik levelet).
+        </p>
+    </div>
+    
+    
+    <h3 class="title">A beszúrás algoritmusa</h3>
+    <div class="text">
+        <p>Ha a fa üres, hozzunk létre egy új levélcsúcsot, ami egyben a gyökércsúcs is, és a beszúrandó kulcs/mutató pár a tartalma! 
+            Különben keressük meg a kulcsnak megfelelő levelet! Ha a levélben már szerepel a kulcs, a beszúrás sikertelen. 
+            Különben menjünk az 1. pontra! Ha a csúcsban van üres hely, szúrjuk be a megfelelő kulcs/mutató párt kulcs szerint rendezetten ebbe a csúcsba! 
+        <p>
+            <b>1.</b> Ha a csúcs már tele van, vágjuk szét két csúccsá, és osszuk el a d darab kulcsot egyenlően a két csúcs között!
+        </p>
+        <p>
+            <b>2.</b> Ha a csúcs egy levél, vegyük a második csúcs legkisebb értékének másolatát, és ismételjük meg ezt a beszúró algoritmust, 
+            hogy beszúrjuk azt a szülő csúcsba! Ha a csúcs nem levél, vegyük ki a középső értéket a kulcsok elosztása során, 
+            és ismételjük meg ezt a beszúró algoritmust, hogy beszúrjuk ezt a középső értéket a szülő csúcsba! (Ha kell, a szülő csúcsot előbb létrehozzuk. 
+            Ekkor a B+ fa magassága nő.)
+        </p>
+    </div>
+    
+    
+    <h3 class="title">A törlés algoritmusa</h3>
+    <div class="text">
+        <p>Keressük meg a törlendő kulcsot tartalmazó levelet! Ha ilyen nincs, a törlés meghiúsul.
+            Különben a törlő algoritnus futása vagy az A esettel fejeződik be; vagy a B esettel folytatódik, ami után a
+            C eset (nullaszor, egyszer, vagy többször) ismédlődhet, és még a D eset is sorra kerülhet végül.
+        </p>
+        <p>
+            <b>A eset:</b> A keresés során megtalált levélcsúcs egyben a gyökércsúcs is:
+        </p>
+        <p>
+            <b>1.</b> Töröljük a megfelelő kulcsot és a hozzá tartozó mutatót a csúcsból!
+        </p>
+        <p>
+            <b>2.</b> Ha a csúcs tartalmaz még kulcsot, kész vagyunk.
+        </p>
+        <p>
+            <b>3.</b> Különben töröljük a fa egyetlen csúcsát, és üres fát kapunk.
+        </p>
+        
+        <br>
+        
+        <p>
+            <b>B eset:</b> A keresés során megtalált levélcsúcs nem a gyökércsúcs:
+        </p>
+        <p>
+            <b>1.</b> Töröljük a megfelelő kulcsot és a hozzá tartozó mutatót a levélcsúcsból!
+        </p>
+        <p>
+            <b>2.</b>Ha a levélcsúcs még tartalmaz elég kulcsot és mutatót, hogy teljesítse az invariánsokat, kész vagyunk.
+        </p>
+        <p>
+            <b>3.</b>Ha a levélcsúcsban már túl kevés kulcs van ahhoz, hogy teljesítse az invariánsokat, de a következő,
+            vagy a megelőző testvérének több van, mint amennyi szükséges, osszuk el a kulcsokat egyenlően
+            közte és a megfelelő testvére között! Írjuk át a két testvér közös szülőjében a két testvérhez tartozó
+            hasító kulcsot a két testvér közül a második minimumára!
+        </p>
+        <p>
+            <b>4.</b>Ha a levélcsúcsban már túl kevés kulcs van ahhoz, hogy teljesítse az invariánst, és a következő,
+            valamint a megelőző testvére is a minimumon van, hogy teljesítse az invariánst, akkor egyesítsük
+            egy vele szomszédos testvérével! Ennek során a két testvér közül a (balról jobbra sorrend szerinti)
+            másodikból a kulcsokat és a hozzájuk tartozó mutatókat sorban átmásoljuk az elsőbe, annak eredeti
+            kulcsai és mutatói után, majd a második testvért töröljük. Ezután meg kell ismételnünk a törlő
+            algoritmust a szülőre, hogy eltávolítsuk a szülőből a hasító kulcsot (ami eddig elválasztotta a most
+            egyesített levélcsúcsokat), a most törölt második testvérre hivatkozó mutatóval együtt.
+        </p>
+        
+        <br>
+
+        <p>
+            <b>C eset:</b> Belső — a gyökértől különböző — csúcsból való törlés:
+        </p>
+        <p>
+            <b>1.</b> Töröljük a belső csúcs éppen most egyesített két gyereke közti hasító kulcsot és az egyesítés során
+            törölt gyerekére hivatkozó mutatót a belső csúcsból!
+        </p>
+        <p>
+            <b>2.</b> Ha a belső csúcsnak van még floor(d/2) gyereke, (hogy teljesítse az invariánsokat) kész vagyunk.
+        </p>
+        <p>
+            <b>3.</b> Ha a belső csúcsnak már túl kevés gyereke van ahhoz, hogy teljesítse az invariánsokat, de a
+            következő, vagy a megelőző testvérének több van, mint amennyi szükséges, osszuk el a gyerekeket
+            és a köztük levő hasító kulcsokat egyenlően közte és a megfelelő testvére között, a hasító kulcsok
+            közé a testvérek közti (a közös szülőjükben lévő) hasító kulcsot is beleértve! A gyerekek és a hasító
+            kulcsok újraelosztása során, a középső hasító kulcs a testvérek közös szülőjében a két testvérhez
+            tartozó régi hasító kulcs helyére kerül úgy, hogy megfelelően reprezentálja a köztük megváltozott
+            vágási pontot! (Ha a két testvérben a gyerekek összlétszáma páratlan, akkor az újraelosztás után is
+            annak a testvérnek legyen több gyereke, akinek előtte is több volt!)
+        </p>
+        <p>
+            <b>4.</b> Ha a belső csúcsnak már túl kevés gyereke van ahhoz, hogy teljesítse az invariánst, és a következő,
+            valamint a megelőző testvére is a minimumon van, hogy teljesítse az invariánst, akkor egyesítsük
+            egy vele szomszédos testvérével! Az egyesített csúcsot a két testvér közül a (balról jobbra sorrend
+            szerinti) elsőből hozzuk létre. Gyerekei és hasító kulcsai először a saját gyerekei és hasító kulcsai
+            az eredeti sorrendben, amiket a két testvér közti (a közös szülőjükben lévő) hasító kulcs követ, és
+            végül a második testvér gyerekei és hasító kulcsai jönnek, szintén az eredeti sorrendben. Ezután
+            töröljük a második testvért. A két testvér egyesítése után meg kell ismételnünk a törlő algoritmust a
+            közös szülőjükre, hogy eltávolítsuk a szülőből a hasító kulcsot (ami eddig elválasztotta a most
+            egyesített testvéreket), a most törölt második testvérre hivatkozó mutatóval együtt.
+        </p>
+
+        <br>
+
+        <p>
+            <b>D eset:</b> A gyökércsúcsból való törlés, ha az nem levélcsúcs:
+        </p>
+        <p>
+            <b>1.</b> Töröljük a gyökércsúcs éppen most egyesített két gyereke közti hasító kulcsot és az egyesítés során
+            törölt gyerekére hivatkozó mutatót a gyökércsúcsból!
+        </p>
+        <p>
+            <b>2.</b> Ha a gyökércsúcsnak van még 2 gyereke, kész vagyunk.
+        </p>
+        <p>
+            <b>3.</b> Ha a gyökércsúcsnak csak 1 gyereke maradt, akkor töröljük a gyökércsúcsot, és a megmaradt
+            egyetlen gyereke legyen az új gyökércsúcs! (Ekkor a B+ fa magassága csökken.)
+        </p>
+    </div>
+</div>

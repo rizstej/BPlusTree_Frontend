@@ -1,0 +1,19 @@
+<div class="box">
+    <h3 class="display-5">Your B+ tree building log</h3>
+    
+    <table class="table">
+        <thead>
+        <tr>
+            <th scope="col">Operation</th>
+            <th scope="col">Key value</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr *ngFor="let log of myTree.logs">
+            <td>{{log.op}}</td>
+            <td>{{log.key}}</td>
+        </tr>
+        </tbody>
+    </table>
+</div>

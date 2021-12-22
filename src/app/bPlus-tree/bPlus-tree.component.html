@@ -1,0 +1,57 @@
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+
+<div class="box">
+<h3 class="display-5">Build your B+ tree</h3>
+
+<table>
+ <tr>
+  <!--THE FORM-->
+  <td class="formBox" rowspan="2"> 
+    <h4 style="vertical-align: top; text-align: left;">B+ tree building menu</h4>  
+    <form (ngSubmit)="onSubmit()" #addForm="ngForm">
+      <br>  
+      <h5 for="option">Select an option:</h5>
+      <select (change)="onChange($event)">
+        <option *ngFor="let x of options" [value]="x.id">{{x.name}}</option>
+      </select>
+      <br><br>
+      <div>
+        <h5 for="input_key_value">{{selectedOption.text}}</h5>
+          <mat-form-field *ngIf="validOptionIsSelected && !newTree">
+              <input matInput
+                  placeholder="Enter value here:"
+                  type="number" 
+                  id="input_key_value" 
+                  required
+                  [(ngModel)]="input_key_value" name="input_key_value">
+          <mat-error *ngIf="!input_key_value">Value is required</mat-error>
+          </mat-form-field>
+      </div>
+      <br>
+      <div>
+        <button mat-flat-button type="submit" id="delete" value="delete"color="primary" *ngIf="validOptionIsSelected && newTree">START OVER</button>
+        <!--<button mat-flat-button type="submit" id="load" value="load" color="primary" *ngIf="validOptionIsSelected && newTree">LOAD</button>-->
+        <!--<button mat-flat-button type="submit" id="save" value="save"color="primary" *ngIf="validOptionIsSelected && newTree">SAVE</button>-->
+        <button mat-flat-button type="submit" id="submit" value="submit" color="primary" *ngIf="validOptionIsSelected && !newTree">GO</button>
+        
+      </div>
+    </form>
+    <br><br>
+  </td>
+  <td height=20px; style="background-color: rgb(245, 245, 245);">
+    <h4 style="margin-top: 9px;">Result</h4>  
+  </td>
+ </tr>
+
+  <!--THE TREE-->
+ <tr>
+  <td class="treeBox">
+    <div id="center">
+      <!--function: drawTree()-->
+    </div>
+  </td>
+ </tr>
+</table><!--END OF FORM & TREEBOX-->
+</div>
+
+<svg id="svg"></svg>

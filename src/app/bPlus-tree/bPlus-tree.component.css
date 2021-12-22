@@ -1,0 +1,71 @@
+.box{
+    display: block;
+    margin: auto;
+    padding: 1%;
+}
+
+
+button{
+    margin-right:10px;
+}
+
+
+table{
+    width: 95%;
+    margin: auto;
+    margin-top: 20px;
+}
+td.formBox{
+    width: 20%;
+    padding: 1%;
+    background-color: rgb(220, 220, 220);
+}
+td.treeBox{
+    width: 80%;
+    background-color: rgb(245, 245, 245);
+    float: top;
+    margin: auto;
+    text-align: center;
+}
+
+
+#center{
+    margin: auto;
+}
+table.node{
+    width: 10%;
+    border: solid 1px black;
+    margin: auto;
+    margin-right: 18px;
+    text-align: center;
+    display: inline-table;
+}
+.level{
+    margin-left: 20%;
+    margin: 0 auto;
+    align-items: center;
+}
+.rootline{
+    margin-top: -13px;
+    margin-left: -5px;
+}
+.nodeline{
+    margin-top: 7.5px;
+    display: inline-table;
+    margin: auto;
+    align-items: center;
+}
+
+
+#svg{
+    
+    left: 200px;
+    top: 150px;
+    width: 100%;
+    height: 100%;
+    position: fixed;
+}
+line{
+    stroke-width:2px;
+    stroke:rgb(0,0,0);
+}

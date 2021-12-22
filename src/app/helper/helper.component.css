@@ -1,0 +1,20 @@
+.box{
+    display: block;
+    margin: auto;
+    padding: 1%;
+}
+body{
+    font-size: 80%;
+}
+.title{
+    width: 90%;
+    margin: auto;
+    margin-bottom: 10px;
+    text-align: center;
+}
+.text{
+    width: 80%;
+    margin: auto;
+    margin-bottom: 20px;
+    text-align: justify;
+}

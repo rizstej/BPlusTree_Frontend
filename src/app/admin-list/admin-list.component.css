@@ -1,0 +1,13 @@
+.box{
+    display: block;
+    margin: auto;
+    padding: 1%;
+}
+body{
+    font-size: 80%;
+}
+table{
+    width: 90%;
+    margin: auto;
+    margin-top: 20px;
+}
