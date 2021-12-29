@@ -16,16 +16,16 @@ describe('AppComponent', () => {
     expect(app).toBeTruthy();
   });
 
-  it(`should have as title 'bPlus-tree-client'`, () => {
+  it(`should have as title 'issue-tracker-client'`, () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.debugElement.componentInstance;
-    expect(app.title).toEqual('bPlus-tree-client');
+    expect(app.title).toEqual('issue-tracker-client');
   });
 
   it('should render title', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.debugElement.nativeElement;
-    expect(compiled.querySelector('.content span').textContent).toContain('bPlus-tree-client app is running!');
+    expect(compiled.querySelector('.content span').textContent).toContain('issue-tracker-client app is running!');
   });
 });

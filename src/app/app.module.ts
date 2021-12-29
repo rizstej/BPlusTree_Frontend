@@ -4,7 +4,6 @@ import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { HttpClientModule } from '@angular/common/http';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
 
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
@@ -40,7 +39,6 @@ import { HelperComponent } from './helper/helper.component';
     BrowserAnimationsModule,
     FlexLayoutModule,
     HttpClientModule,
-    HttpClientTestingModule,
     MatToolbarModule,
     MatIconModule,
     MatButtonToggleModule,

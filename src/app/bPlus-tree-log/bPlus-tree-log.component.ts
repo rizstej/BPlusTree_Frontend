@@ -8,7 +8,7 @@ import { Keys } from '../models/keys';
 import { Builder } from '../models/builder';
 
 @Component({
-  selector: 'app-issue-list',
+  selector: 'app-bplus-tree',
   templateUrl: './bPlus-tree-log.component.html',
   styleUrls: ['./bPlus-tree-log.component.css']
 })

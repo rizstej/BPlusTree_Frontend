@@ -2,7 +2,7 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { BPlusTreeLogComponent } from './bPlus-tree-log.component';
 
-describe('BPlusTreeLogComponent', () => {
+describe('SplitBillListComponent', () => {
   let component: BPlusTreeLogComponent;
   let fixture: ComponentFixture<BPlusTreeLogComponent>;
 
