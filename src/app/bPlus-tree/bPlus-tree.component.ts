@@ -8,7 +8,8 @@ import { AuthService } from '../auth.service';
 import { DataService } from '../services/data.service';
 import { isNumber } from 'util';
 import { THIS_EXPR } from '@angular/compiler/src/output/output_ast';
-import { ConstantPool } from '@angular/compiler';
+import { root } from 'rxjs/internal-compatibility';
+import { notDeepEqual } from 'assert';
 
 
 @Component({
@@ -46,7 +47,8 @@ export class BPlusTreeComponent implements OnInit {
     { id: -1, name: "Please choose an option", text:""},
     { id: 0, name: "Build a new Tree", text:""},
     { id: 1, name: "Insert", text:"Key value:"},
-    { id: 2, name: "Delete", text:"Key value:"}
+    { id: 2, name: "Delete", text:"Key value:"},
+    { id: 3, name: "Search", text:"Key value:"}
   ];
 
 
@@ -61,6 +63,7 @@ export class BPlusTreeComponent implements OnInit {
   public validOptionIsSelected: boolean;
   public newTree: boolean;
   public emptyArray: boolean = true;
+  public searchRout: string = " ";
 
 
   //Message sent between components
@@ -84,6 +87,7 @@ export class BPlusTreeComponent implements OnInit {
   //
   async ngOnInit(): Promise<void> {
     this.myTree = new Tree();
+    this.selectedOption=this.options[0];
 
     this.data.currentMessage.subscribe(message => this.message = message);
     this.myTree = this.message;
@@ -101,6 +105,7 @@ export class BPlusTreeComponent implements OnInit {
     this.myTree = this.message;
     
     this.buildTree();
+    this.drawTree();
 
   }
 
@@ -111,6 +116,8 @@ export class BPlusTreeComponent implements OnInit {
   onChange(event): void {  
 
     const newOP = event.target.options;
+    console.log("onChange");
+
     
     if(newOP.selectedIndex==0){
       this.selectedOption=this.options[0];
@@ -118,6 +125,7 @@ export class BPlusTreeComponent implements OnInit {
       this.selectedOptionName=this.options[0].name;
       this.validOptionIsSelected=false;
       this.newTree=false;
+      this.ngOnInit();
       return;
     }
     if (newOP.selectedIndex==1){
@@ -126,6 +134,7 @@ export class BPlusTreeComponent implements OnInit {
       console.log(this.selectedOption);
       this.validOptionIsSelected=true;
       this.newTree=true;
+      this.ngOnInit();
       return;
     }
     if (newOP.selectedIndex==2){
@@ -134,6 +143,7 @@ export class BPlusTreeComponent implements OnInit {
       console.log(this.selectedOption);
       this.validOptionIsSelected=true;
       this.newTree=false;
+      this.ngOnInit();
       return;
     }
     if (newOP.selectedIndex==3){
@@ -142,6 +152,16 @@ export class BPlusTreeComponent implements OnInit {
       console.log(this.selectedOption);
       this.validOptionIsSelected=true;
       this.newTree=false;
+      this.ngOnInit();
+      return;
+    }
+    if (newOP.selectedIndex==4){
+      this.selectedOption=this.options[4];
+      this.selectedOptionName=this.options[4].name;
+      console.log(this.selectedOption);
+      this.validOptionIsSelected=true;
+      this.newTree=false;
+      this.ngOnInit();
       return;
     }
   }
@@ -153,9 +173,8 @@ export class BPlusTreeComponent implements OnInit {
   async onSubmit(){
 
     var activeButton = document.activeElement.id;
-
     //Adding values and steps to arrays if OPTION = INSERT or DELETE
-    if (activeButton == "submit") {    
+    if (activeButton == "submit") {
       if(this.selectedOptionName=="Insert"){
         if(!this.alreadyInserted(this.input_key_value) && this.input_key_value!=null && this.input_key_value!=0){
           this.key_values.push(this.input_key_value);
@@ -167,7 +186,7 @@ export class BPlusTreeComponent implements OnInit {
         } else {
           alert("The input value you added is already inserted or not valid!");
         }
-      }else{
+      }else if(this.selectedOptionName=="Delete"){
         if(this.alreadyInserted(this.input_key_value) && this.input_key_value!=null && this.input_key_value!=0){
           const index: number = this.key_values.indexOf(this.input_key_value);
           if (index !== -1) {
@@ -178,6 +197,16 @@ export class BPlusTreeComponent implements OnInit {
           
         } else {
           alert("The input value can not be deleted because it is not in the tree or not a valid value!");
+        }
+      } else if(this.selectedOptionName=="Search"){
+        if(this.alreadyInserted(this.input_key_value) && this.input_key_value!=null && this.input_key_value!=0){
+          console.log("true");
+          console.log(this.input_key_value);
+          this.search(true,this.input_key_value);
+        } else {
+          console.log("false");
+          console.log(this.input_key_value);
+          this.search(false,this.input_key_value);
         }
       }
       this.input_key_value = null;
@@ -200,6 +229,7 @@ export class BPlusTreeComponent implements OnInit {
     }
 
     this.newMessage();
+    this.drawTree();
   }
 
 
@@ -266,11 +296,17 @@ export class BPlusTreeComponent implements OnInit {
             return this.split(node, key);
         } else {            
             node.keyvalues.push(key);
-            node.recordnumber = node.recordnumber + 1;
+            node.recordnumber = node.keyvalues.length;
             this.sortKeyValues(node.keyvalues);
+            //===== Logs for checking if code is running correctly =====
+            console.log("Returns:"); console.log("node: " + null); console.log("key: " + -1);
+            //===== Logs over =====
             return [null,-1];
         }
     }
+    //===== Logs for checking if code is running correctly =====
+    console.log("Returns:"); console.log("node: " + null); console.log("key: " + -1);
+    //===== Logs over =====
     return [null,-1];
   }
 
@@ -289,11 +325,32 @@ export class BPlusTreeComponent implements OnInit {
       
       const index: number = node.keyvalues.indexOf(key);
       if (index != -1) {
-          if(node.keyvalues.length==2){
+          if(node.isRoot){
+            //===== Logs for checking if code is running correctly =====
+            console.log("node is root");
+            //===== Logs over =====
+              if(node.keyvalues.length!=1){
+                node.keyvalues.splice(index, 1);
+                node.recordnumber = node.keyvalues.length;
+                this.sortKeyValues(node.keyvalues);
+                //===== Logs for checking if code is running correctly =====
+                console.log("Returns:"); console.log("node: " + null); console.log("key: " + -1);
+                //===== Logs over =====
+                return [null,-1];
+              } else if(node.keyvalues.length==1){
+                //===== Logs for checking if code is running correctly =====
+                console.log("Restart!");
+                //===== Logs over =====
+                this.restart();
+              }
+          } else if(node.keyvalues.length==2){
               return this.merge(node, key);
           } else {
+              //===== Logs for checking if code is running correctly =====
+              console.log("node is NOT root -> keyvalues != 2"); console.log("Returns:"); console.log("node: " + null); console.log("key: " + -1);
+              //===== Logs over =====
               node.keyvalues.splice(index, 1);
-              node.recordnumber = node.recordnumber - 1;
+              node.recordnumber = node.keyvalues.length;
               this.sortKeyValues(node.keyvalues);
               return [null,-1];
           }
@@ -352,6 +409,9 @@ export class BPlusTreeComponent implements OnInit {
 
           max_keyvalue = valuesToSplit[2];
 
+          //===== Logs for checking if code is running correctly =====
+          console.log("Returns:"); console.log("node: " + node.keyvalues); console.log("key: " + max_keyvalue);
+          //===== Logs over =====
           return [newNode, max_keyvalue];
       } 
       
@@ -370,6 +430,12 @@ export class BPlusTreeComponent implements OnInit {
           node.keyvalues.push(valuesToSplit[1]);
           node.recordnumber=2;
 
+          if(node.childPointers[0]!=null){console.log("child_0: " + node.childPointers[0].keyvalues);}
+          if(node.childPointers[1]!=null){console.log("child_1: " + node.childPointers[1].keyvalues);}
+          if(node.childPointers[2]!=null){console.log("child_2: " + node.childPointers[2].keyvalues);}
+          if(node.childPointers[3]!=null){console.log("child_3: " + node.childPointers[3].keyvalues);}
+          if(node.childPointers[4]!=null){console.log("child_4: " + node.childPointers[4].keyvalues);}
+
           //creating a new node
           newNode = new Node();
           newNode.isLeaf = false;
@@ -386,6 +452,10 @@ export class BPlusTreeComponent implements OnInit {
           this.myTree.nodes.push(newNode);
 
           max_keyvalue = valuesToSplit[2];
+          
+          //===== Logs for checking if code is running correctly =====
+          console.log("Returns:"); console.log("node: " + newNode.keyvalues); console.log("key: " + max_keyvalue);
+          //===== Logs over =====
           return [newNode, max_keyvalue];
       }
 
@@ -404,12 +474,55 @@ export class BPlusTreeComponent implements OnInit {
       console.log("Merge()"); console.log("node: " + node.keyvalues); console.log("key: " + key);
       //===== Logs over =====
 
+      console.log("checking for notEnoughChildrenDifferentParent");
+      let tmpNode=node;
+      let notEnoughOnRight = false;
+      let notEnoughOnLeft = false;
+      console.log("tmpNode.keyvalues: " + tmpNode.keyvalues);
+
+      while(!notEnoughOnRight && tmpNode.nextLeaf!=null){
+        console.log("while - checking notEnoughOnRight");
+        if(tmpNode.parentNode!=tmpNode.nextLeaf.parentNode){
+          console.log("tmpNode: " + tmpNode.keyvalues);
+          console.log("tmpNode.parentNode: " + tmpNode.parentNode.keyvalues);
+          console.log(".");
+          console.log("tmpNode.prevLeaf: " + tmpNode.prevLeaf.keyvalues);
+          console.log("tmpNode.prevLeaf.parentNode: " + tmpNode.prevLeaf.parentNode.keyvalues);
+          if(tmpNode.nextLeaf.parentNode.childPointers.length<3 || tmpNode.nextLeaf.parentNode.childPointers[2]==null){
+            notEnoughOnRight = true;
+            console.log("notEnoughOnRight = true");
+          }
+        }
+        tmpNode = tmpNode.nextLeaf;
+      }
+
+      console.log("reset");
+      tmpNode=node;
+      console.log("tmpNode.keyvalues: " + tmpNode.keyvalues);
+
+      while(!notEnoughOnLeft && tmpNode.prevLeaf!=null){
+        console.log("while - checking notEnoughOnLeft");
+        
+        if(tmpNode.parentNode!=tmpNode.prevLeaf.parentNode){
+          console.log("tmpNode: " + tmpNode.keyvalues);
+          console.log("tmpNode.parentNode: " + tmpNode.parentNode.keyvalues);
+          console.log(".");
+          console.log("tmpNode.prevLeaf: " + tmpNode.prevLeaf.keyvalues);
+          console.log("tmpNode.prevLeaf.parentNode: " + tmpNode.prevLeaf.parentNode.keyvalues);
+          if(tmpNode.prevLeaf.parentNode.childPointers.length<3 || tmpNode.prevLeaf.parentNode.childPointers[2]==null){
+            notEnoughOnLeft = true;
+            console.log("notEnoughOnLeft = true");
+          }
+        }
+        tmpNode = tmpNode.prevLeaf;
+      }
+
       var max_keyvalue;
       var mergedNode;
       var valuesLeft = [];
       
       //if the leaf has a left sibling and share a parent node
-      if(node.prevLeaf!=null  && node.parentNode==node.prevLeaf.parentNode && node.parentNode.childPointers.length >= 3) {
+      if(node.prevLeaf!=null  && node.parentNode==node.prevLeaf.parentNode && node.parentNode.childPointers.length >= 3 && !notEnoughOnRight && !notEnoughOnLeft) {
         
         //===== Logs for checking if code is running correctly =====
         console.log("Merging with previous leaf");
@@ -421,7 +534,7 @@ export class BPlusTreeComponent implements OnInit {
         if(node.prevLeaf != null){ if(node.prevLeaf.nextLeaf != null && node.nextLeaf != null){node.prevLeaf.nextLeaf = node.nextLeaf;} }
         if(node.nextLeaf != null){ if(node.nextLeaf.prevLeaf != null && node.prevLeaf != null){node.nextLeaf.prevLeaf = node.prevLeaf;} }
 
-        //deleteing key, and adding the one key left in node to previous leaf
+        //deleting key, and adding the one key left in node to previous leaf
         const ind: number = node.keyvalues.indexOf(key);
         node.keyvalues.splice(ind,1);
         valuesLeft = node.keyvalues;
@@ -436,11 +549,14 @@ export class BPlusTreeComponent implements OnInit {
         const index = this.myTree.nodes.indexOf(node);
         this.myTree.nodes.splice(index,1);
 
+        //===== Logs for checking if code is running correctly =====
+        console.log("Returns:"); console.log("node: " + mergedNode.keyvalues); console.log("key: " + max_keyvalue);
+        //===== Logs over =====
         return [mergedNode, max_keyvalue];
 
       } 
       //if the leaf has a left sibling and share a parent node
-      else if(node.nextLeaf!=null && node.parentNode==node.nextLeaf.parentNode && node.parentNode.childPointers.length >= 3) { 
+      else if(node.nextLeaf!=null && node.parentNode==node.nextLeaf.parentNode && node.parentNode.childPointers.length >= 3 && !notEnoughOnRight && !notEnoughOnLeft) { 
         
         //===== Logs for checking if code is running correctly =====
         console.log("Merging with next leaf");
@@ -452,7 +568,7 @@ export class BPlusTreeComponent implements OnInit {
         if(node.prevLeaf != null){ if(node.prevLeaf.nextLeaf != null && node.nextLeaf != null){node.prevLeaf.nextLeaf = node.nextLeaf;} }
         if(node.nextLeaf != null){ if(node.nextLeaf.prevLeaf != null && node.prevLeaf != null){node.nextLeaf.prevLeaf = node.prevLeaf;} }
         
-        //deleteing key, and adding the one key left in node to previous leaf
+        //deleting key, and adding the one key left in node to next leaf
         const ind: number = node.keyvalues.indexOf(key);
         node.keyvalues.splice(ind,1);
         valuesLeft = node.keyvalues;
@@ -467,9 +583,14 @@ export class BPlusTreeComponent implements OnInit {
         const index = this.myTree.nodes.indexOf(node);
         this.myTree.nodes.splice(index,1);
 
+        //===== Logs for checking if code is running correctly =====
+        console.log("Returns:"); console.log("node: " + mergedNode.keyvalues); console.log("key: " + max_keyvalue);
+        //===== Logs over =====
         return [mergedNode, max_keyvalue];
 
-      } else if(node.parentNode.childPointers.length < 3) { 
+      } 
+      //if the leaf has less than 3 siblings and next of previous parent has stealable leaves
+      else if(node.parentNode != null && node.parentNode.childPointers.length < 3 && !notEnoughOnRight && !notEnoughOnLeft) {  //Error: Uncaught (in promise): TypeError: Cannot read properties of null (reading 'childPointers')
         
         //===== Logs for checking if code is running correctly =====
         console.log("Sibling Transfer");
@@ -487,7 +608,7 @@ export class BPlusTreeComponent implements OnInit {
           if(node.prevLeaf != null){ if(node.prevLeaf.nextLeaf != null && node.nextLeaf != null){node.prevLeaf.nextLeaf = node.nextLeaf;} }
           if(node.nextLeaf != null){ if(node.nextLeaf.prevLeaf != null && node.prevLeaf != null){node.nextLeaf.prevLeaf = node.prevLeaf;} }
 
-          //deleteing key, and adding the one key left in node to previous leaf
+          //deleting key, and adding the one key left in node to previous leaf
           const ind: number = node.keyvalues.indexOf(key);
           node.keyvalues.splice(ind,1);
           valuesLeft = node.keyvalues;
@@ -512,6 +633,7 @@ export class BPlusTreeComponent implements OnInit {
             
             let parentWeStealFrom = mergedNode.nextLeaf.parentNode;
             let childIndex = parentWeStealFrom.childPointers.indexOf(mergedNode.nextLeaf);
+            let stolenChild = parentWeStealFrom.childPointers[childIndex];
 
             //adjusting childPointers
             mergedNode.parentNode.childPointers.push(null);
@@ -554,6 +676,8 @@ export class BPlusTreeComponent implements OnInit {
             parentWeStealFrom.parentNode.keyvalues[yInd] = z;
             mergedNode.parentNode.keyvalues[xInd] = y;
 
+            stolenChild.parentNode = mergedNode.parentNode;
+
           } else {
 
             //===== Logs for checking if code is running correctly =====
@@ -562,6 +686,7 @@ export class BPlusTreeComponent implements OnInit {
 
             let parentWeStealFrom = mergedNode.prevLeaf.parentNode;
             let childIndex = parentWeStealFrom.childPointers.indexOf(mergedNode.prevLeaf);
+            let stolenChild = parentWeStealFrom.childPointers[childIndex];
 
             //adjusting childPointers
             mergedNode.parentNode.childPointers.push(null);
@@ -604,6 +729,8 @@ export class BPlusTreeComponent implements OnInit {
             parentWeStealFrom.keyvalues.splice(xInd,1);
             parentWeStealFrom.parentNode.keyvalues[yInd] = x;
             mergedNode.parentNode.keyvalues[zInd] = y;
+
+            stolenChild.parentNode = mergedNode.parentNode;
           
           }//End of Sibling Trasfer
 
@@ -620,7 +747,7 @@ export class BPlusTreeComponent implements OnInit {
           if(node.prevLeaf != null){ if(node.prevLeaf.nextLeaf != null && node.nextLeaf != null){node.prevLeaf.nextLeaf = node.nextLeaf;} }
           if(node.nextLeaf != null){ if(node.nextLeaf.prevLeaf != null && node.prevLeaf != null){node.nextLeaf.prevLeaf = node.prevLeaf;} }
           
-          //deleteing key, and adding the one key left in node to previous leaf
+          //deleting key, and adding the one key left in node to previous leaf
           const ind: number = node.keyvalues.indexOf(key);
           node.keyvalues.splice(ind,1);
           valuesLeft = node.keyvalues;
@@ -644,6 +771,7 @@ export class BPlusTreeComponent implements OnInit {
 
             let parentWeStealFrom = mergedNode.nextLeaf.parentNode;
             let childIndex = parentWeStealFrom.childPointers.indexOf(mergedNode.nextLeaf);
+            let stolenChild = parentWeStealFrom.childPointers[childIndex];
 
             //adjusting childPointers
             mergedNode.parentNode.childPointers.push(null);
@@ -686,6 +814,8 @@ export class BPlusTreeComponent implements OnInit {
             parentWeStealFrom.parentNode.keyvalues[yInd] = z;
             mergedNode.parentNode.keyvalues[xInd] = y;
 
+            stolenChild.parentNode = mergedNode.parentNode;
+
           } else {
             //===== Logs for checking if code is running correctly =====
             console.log("Transferring sibling from the left side");
@@ -693,12 +823,14 @@ export class BPlusTreeComponent implements OnInit {
             
             let parentWeStealFrom = mergedNode.prevLeaf.parentNode;
             let childIndex = parentWeStealFrom.childPointers.indexOf(mergedNode.prevLeaf);
+            let stolenChild = parentWeStealFrom.childPointers[childIndex];
 
             //adjusting childPointers
             mergedNode.parentNode.childPointers.push(null);
             mergedNode.parentNode.childPointers[1] = mergedNode;
             mergedNode.parentNode.childPointers[0] = parentWeStealFrom.childPointers[childIndex];
-            
+            parentWeStealFrom.childPointers[childIndex].parentNode = mergedNode.parentNode;
+
             parentWeStealFrom.childPointers[childIndex] = null;
             
             let haveNull = parentWeStealFrom.childPointers.includes(null);
@@ -735,13 +867,358 @@ export class BPlusTreeComponent implements OnInit {
             parentWeStealFrom.keyvalues.splice(xInd,1);
             parentWeStealFrom.parentNode.keyvalues[yInd] = x;
             mergedNode.parentNode.keyvalues[zInd] = y;
-          
-          }//End of Sibling Trasfer
-          
-        }
 
+            stolenChild.parentNode = mergedNode.parentNode;
+
+          }//End of Sibling Trasfer
+        }
+        return [null, -1];
+      
+      //LEVEL REDUCTION
+      } else if (notEnoughOnRight || notEnoughOnLeft){
+        //===== Logs for checking if code is running correctly =====
+        console.log("ELSE IF A MERGE-BEN -> notEnoughChildrenDifferentParent");
+        console.log("node: " + node.keyvalues);
+        console.log("node.parentNode: " + node.parentNode.keyvalues);
+        console.log("node.parentNode.parentNode: " + node.parentNode.parentNode.keyvalues);
+        console.log("notEnoughOnRight: " + notEnoughOnRight);
+        console.log("notEnoughOnLeft: " + notEnoughOnLeft);
+        //===== Logs over =====
+        
+        if(node.nextLeaf!=null && node.parentNode==node.nextLeaf.parentNode){
+          console.log("node.nextLeaf!=null && node.parentNode==node.nextLeaf.parentNode");
+          let parentWeMerge = null;
+          if(node.parentNode==node.parentNode.parentNode.childPointers[0]){
+            parentWeMerge = node.nextLeaf.nextLeaf.parentNode;
+          } else {
+            parentWeMerge = node.prevLeaf.parentNode;
+          }
+          console.log("parentWeMerge: " + parentWeMerge.keyvalues);
+
+          //deleting key, and adding the one key left in node to next leaf
+          let ind = node.keyvalues.indexOf(key);
+          node.keyvalues.splice(ind,1);
+          valuesLeft = node.keyvalues;
+          node.nextLeaf.keyvalues.push(valuesLeft[0]);
+          this.sortKeyValues(node.nextLeaf.keyvalues);
+          console.log("AFTER SORT node.nextLeaf.keyvalues: " + node.nextLeaf.keyvalues);
+          node.nextLeaf.recordnumber = node.nextLeaf.keyvalues.length;
+          mergedNode = node.nextLeaf;
+
+          //deleting node from tree
+          node.keyvalues.splice(0,3);
+          node.recordnumber = node.keyvalues.length;
+          let index = this.myTree.nodes.indexOf(node);
+          this.myTree.nodes.splice(index,1);
+
+          //child pointer adjustment
+          if(mergedNode.keyvalues[0]<parentWeMerge.keyvalues[0]) {
+            parentWeMerge.childPointers.push(null);
+            parentWeMerge.childPointers[2] = parentWeMerge.childPointers[1];
+            parentWeMerge.childPointers[1] = parentWeMerge.childPointers[0];
+            parentWeMerge.childPointers[0] = mergedNode;
+          } else {
+            parentWeMerge.childPointers.push(null);
+            parentWeMerge.childPointers[2] = mergedNode;
+          }
+
+          let haveNull = parentWeMerge.childPointers.includes(null);
+          while(haveNull){
+            let nullindex;
+            nullindex = parentWeMerge.childPointers.indexOf(null);
+            parentWeMerge.childPointers.splice(nullindex,1);
+            haveNull = parentWeMerge.childPointers.includes(null);
+          }
+
+          //modifying root
+          console.log("modifying root part");
+          console.log("parentWeMerge: " + parentWeMerge.keyvalues);
+          console.log("parentWeMerge.parentNode: " + parentWeMerge.parentNode.keyvalues); console.log("isRoot? " + parentWeMerge.parentNode.isRoot);
+          
+          if(!parentWeMerge.parentNode.isRoot){
+            console.log("!parentWeMerge.parentNode.isRoot TEST!!!!!!!!!!!!!!!");
+            
+            if(parentWeMerge.parentNode==this.myTree.root.childPointers[0]){
+              console.log("this.myTree.root.childPointers[0]: " + this.myTree.root.childPointers[0].keyvalues);
+              console.log("parentWeMerge.parentNode: " + parentWeMerge.parentNode.keyvalues);
+              //merging nodes
+              parentWeMerge.keyvalues.push(parentWeMerge.parentNode.keyvalues[0]);
+              this.sortKeyValues(parentWeMerge.keyvalues);
+              //deleting unnecessary node
+              index = this.myTree.nodes.indexOf(parentWeMerge.parentNode);
+              this.myTree.nodes.splice(index,1);
+              //pointer adjustment
+              this.myTree.root.childPointers[0] = parentWeMerge;
+              parentWeMerge.parentNode = this.myTree.root;
+              //root merge with child
+              this.myTree.root.keyvalues.push(this.myTree.root.childPointers[1].keyvalues[0]);
+              this.sortKeyValues(this.myTree.root.keyvalues);
+              //root childpointer adjustment
+              this.myTree.root.childPointers.push(this.myTree.root.childPointers[1].childPointers[0]);
+              this.myTree.root.childPointers.push(this.myTree.root.childPointers[1].childPointers[1]);
+              this.myTree.root.childPointers[1].childPointers[0].parentNode = this.myTree.root;
+              this.myTree.root.childPointers[1].childPointers[1].parentNode = this.myTree.root;
+              //deleting unnecessary node
+              index = this.myTree.nodes.indexOf(this.myTree.root.childPointers[1]);
+              this.myTree.nodes.splice(index,1);
+            } else {
+              console.log("this.myTree.root.childPointers[0]: " + this.myTree.root.childPointers[0].keyvalues);
+              console.log("parentWeMerge.parentNode: " + parentWeMerge.parentNode.keyvalues);
+              //merging nodes
+              parentWeMerge.keyvalues.push(parentWeMerge.parentNode.keyvalues[0]);
+              this.sortKeyValues(parentWeMerge.keyvalues);
+              //deleting unnecessary node
+              index = this.myTree.nodes.indexOf(parentWeMerge.parentNode);
+              this.myTree.nodes.splice(index,1);
+              //pointer adjustment
+              this.myTree.root.childPointers[2] = parentWeMerge;
+              parentWeMerge.parentNode = this.myTree.root;
+              //root merge with child
+              this.myTree.root.keyvalues.push(this.myTree.root.childPointers[0].keyvalues[0]);
+              this.sortKeyValues(this.myTree.root.keyvalues);
+              //root childpointer adjustment
+              this.myTree.root.childPointers[0] = this.myTree.root.childPointers[0].childPointers[0];
+              this.myTree.root.childPointers[1] = this.myTree.root.childPointers[0].childPointers[1];
+              this.myTree.root.childPointers[0].childPointers[0].parentNode = this.myTree.root;
+              this.myTree.root.childPointers[0].childPointers[1].parentNode = this.myTree.root;
+              //deleting unnecessary node
+              index = this.myTree.nodes.indexOf(this.myTree.root.childPointers[0]);
+              this.myTree.nodes.splice(index,1);
+
+            }
+
+          } else {
+            parentWeMerge.keyvalues.push(this.myTree.root.keyvalues[0]);
+            this.sortKeyValues(parentWeMerge.keyvalues);
+
+            index = this.myTree.nodes.indexOf(this.myTree.root);
+            this.myTree.nodes.splice(index,1);
+
+            this.myTree.root=parentWeMerge;
+
+            parentWeMerge.isRoot=true;
+            parentWeMerge.parentNode=null;
+            parentWeMerge.recordnumber=parentWeMerge.keyvalues.length;
+          }
+
+          //===== Logs for checking if code is running correctly =====
+          console.log("parentWeMerge: " + parentWeMerge.keyvalues);
+          console.log("!!!!! parentWeMerge.recordnumber=parentWeMerge.keyvalues.length !!!!!");
+          console.log("parentWeMerge.recordnumber: " + parentWeMerge.recordnumber);
+          console.log("parentWeMerge.keyvalues.length: " + parentWeMerge.keyvalues.length);
+          for(let i=0; i<parentWeMerge.childPointers.length; i++){
+            console.log("parentWeMerge.childPointer: " + i + ". INDEX: " + parentWeMerge.childPointers[i].keyvalues);
+          }
+          for(let i=0; i<this.myTree.nodes.length; i++){
+            console.log("myTree.node: " + i + ". INDEX: " + this.myTree.nodes[i].keyvalues);
+          }
+          //===== Logs over =====
+          return [null, -1];
+
+        } else if(node.prevLeaf!=null && node.parentNode==node.prevLeaf.parentNode){
+          console.log("node.prevLeaf!=null && node.parentNode==node.prevLeaf.parentNode");
+          let parentWeMerge = null;
+          if(node.parentNode==node.parentNode.parentNode.childPointers[1]){
+            parentWeMerge = node.prevLeaf.prevLeaf.parentNode;
+          } else {
+            parentWeMerge = node.nextLeaf.parentNode;
+          }
+          console.log("parentWeMerge: " + parentWeMerge.keyvalues);
+
+          //deleting key, and adding the one key left in node to next leaf
+          let ind = node.keyvalues.indexOf(key);
+          node.keyvalues.splice(ind,1);
+          valuesLeft = node.keyvalues;
+          node.prevLeaf.keyvalues.push(valuesLeft[0]);
+          this.sortKeyValues(node.prevLeaf.keyvalues);
+          console.log("AFTER SORT node.prevLeaf.keyvalues: " + node.prevLeaf.keyvalues);
+          node.prevLeaf.recordnumber = node.prevLeaf.keyvalues.length;
+          mergedNode = node.prevLeaf;
+
+          //deleting node from tree
+          node.keyvalues.splice(0,3);
+          node.recordnumber = node.keyvalues.length;
+          let index = this.myTree.nodes.indexOf(node);
+          this.myTree.nodes.splice(index,1);
+
+          // !!!!!!!!!!! child pointer adjustment
+          if(mergedNode.keyvalues[0]<parentWeMerge.keyvalues[0]) {
+            parentWeMerge.childPointers.push(null);
+            parentWeMerge.childPointers[2] = parentWeMerge.childPointers[1];
+            parentWeMerge.childPointers[1] = parentWeMerge.childPointers[0];
+            parentWeMerge.childPointers[0] = mergedNode;
+          } else {
+            parentWeMerge.childPointers.push(null);
+            parentWeMerge.childPointers[2] = mergedNode;
+          }
+
+          let haveNull = parentWeMerge.childPointers.includes(null);
+          while(haveNull){
+            let nullindex;
+            nullindex = parentWeMerge.childPointers.indexOf(null);
+            parentWeMerge.childPointers.splice(nullindex,1);
+            haveNull = parentWeMerge.childPointers.includes(null);
+          }
+
+          //modifying root
+          console.log("modifying root part");
+          console.log("parentWeMerge: " + parentWeMerge.keyvalues);
+          console.log("parentWeMerge.parentNode: " + parentWeMerge.parentNode.keyvalues); console.log("isRoot? " + parentWeMerge.parentNode.isRoot);
+          
+          if(!parentWeMerge.parentNode.isRoot){
+            console.log("!parentWeMerge.parentNode.isRoot TEST!!!!!!!!!!!!!!!");
+            
+            if(parentWeMerge.parentNode==this.myTree.root.childPointers[0]){
+              console.log("this.myTree.root.childPointers[0]: " + this.myTree.root.childPointers[0].keyvalues);
+              console.log("parentWeMerge.parentNode: " + parentWeMerge.parentNode.keyvalues);
+              //merging nodes
+              parentWeMerge.keyvalues.push(parentWeMerge.parentNode.keyvalues[0]);
+              this.sortKeyValues(parentWeMerge.keyvalues);
+              //deleting unnecessary node
+              index = this.myTree.nodes.indexOf(parentWeMerge.parentNode);
+              this.myTree.nodes.splice(index,1);
+              //pointer adjustment
+              this.myTree.root.childPointers[0] = parentWeMerge;
+              parentWeMerge.parentNode = this.myTree.root;
+              //root merge with child
+              this.myTree.root.keyvalues.push(this.myTree.root.childPointers[1].keyvalues[0]);
+              this.sortKeyValues(this.myTree.root.keyvalues);
+              //root childpointer adjustment
+              this.myTree.root.childPointers.push(this.myTree.root.childPointers[1].childPointers[0]);
+              this.myTree.root.childPointers.push(this.myTree.root.childPointers[1].childPointers[1]);
+              this.myTree.root.childPointers[1].childPointers[0].parentNode = this.myTree.root;
+              this.myTree.root.childPointers[1].childPointers[1].parentNode = this.myTree.root;
+              //deleting unnecessary node
+              index = this.myTree.nodes.indexOf(this.myTree.root.childPointers[1]);
+              this.myTree.nodes.splice(index,1);
+            } else {
+              console.log("this.myTree.root.childPointers[0]: " + this.myTree.root.childPointers[0].keyvalues);
+              console.log("parentWeMerge.parentNode: " + parentWeMerge.parentNode.keyvalues);
+              //merging nodes
+              parentWeMerge.keyvalues.push(parentWeMerge.parentNode.keyvalues[0]);
+              this.sortKeyValues(parentWeMerge.keyvalues);
+              //deleting unnecessary node
+              index = this.myTree.nodes.indexOf(parentWeMerge.parentNode);
+              this.myTree.nodes.splice(index,1);
+              //pointer adjustment
+              this.myTree.root.childPointers[2] = parentWeMerge;
+              parentWeMerge.parentNode = this.myTree.root;
+              //root merge with child
+              this.myTree.root.keyvalues.push(this.myTree.root.childPointers[0].keyvalues[0]);
+              this.sortKeyValues(this.myTree.root.keyvalues);
+              //root childpointer adjustment
+              this.myTree.root.childPointers[0] = this.myTree.root.childPointers[0].childPointers[0];
+              this.myTree.root.childPointers[1] = this.myTree.root.childPointers[0].childPointers[1];
+              this.myTree.root.childPointers[0].childPointers[0].parentNode = this.myTree.root;
+              this.myTree.root.childPointers[0].childPointers[1].parentNode = this.myTree.root;
+              //deleting unnecessary node
+              index = this.myTree.nodes.indexOf(this.myTree.root.childPointers[0]);
+              this.myTree.nodes.splice(index,1);
+
+            }
+
+          } else {
+            parentWeMerge.keyvalues.push(this.myTree.root.keyvalues[0]);
+            this.sortKeyValues(parentWeMerge.keyvalues);
+
+            index = this.myTree.nodes.indexOf(this.myTree.root);
+            this.myTree.nodes.splice(index,1);
+
+            this.myTree.root=parentWeMerge;
+
+            parentWeMerge.isRoot=true;
+            parentWeMerge.parentNode=null;
+            parentWeMerge.recordnumber=parentWeMerge.keyvalues.length;
+          }
+
+          //===== Logs for checking if code is running correctly =====
+          console.log("parentWeMerge: " + parentWeMerge.keyvalues);
+          console.log("!!!!! parentWeMerge.recordnumber=parentWeMerge.keyvalues.length !!!!!");
+          console.log("parentWeMerge.recordnumber: " + parentWeMerge.recordnumber);
+          console.log("parentWeMerge.keyvalues.length: " + parentWeMerge.keyvalues.length);
+          for(let i=0; i<parentWeMerge.childPointers.length; i++){
+            console.log("parentWeMerge.childPointer: " + i + ". INDEX: " + parentWeMerge.childPointers[i].keyvalues);
+          }
+          for(let i=0; i<this.myTree.nodes.length; i++){
+            console.log("myTree.node: " + i + ". INDEX: " + this.myTree.nodes[i].keyvalues);
+          }
+          //===== Logs over =====
+          return [null, -1];
+
+        }
         return [null, -1];
       }
+
+  }
+
+  //
+  // === Searching nodes in the tree ===
+  //
+  search(containKey: boolean, key: number){
+
+    this.actual_node = this.myTree.root;
+    var stack:Array<Node> = [];
+    var child_index;
+    if(containKey){
+      this.searchRout = "A keresett szám benne van a fában, helye: ";
+    } else {
+      this.searchRout = "A keresett szám nincs benne a fában, de itt lenne a helye: ";
+    }
+
+    stack.push(this.actual_node);
+
+    while(!this.actual_node.isLeaf){
+
+      if(key < this.actual_node.keyvalues[0] && this.actual_node != null) { 
+          child_index = 0;
+          this.actual_node = this.actual_node.childPointers[child_index];
+          stack.push(this.actual_node); 
+      } 
+      else if(key >= this.actual_node.keyvalues[0] && this.actual_node.keyvalues[1]==null && this.actual_node != null) {
+          child_index = 1;
+          this.actual_node = this.actual_node.childPointers[child_index];
+          stack.push(this.actual_node); 
+      }
+      else if (this.actual_node.keyvalues[0] <= key && key < this.actual_node.keyvalues[1] && this.actual_node != null) { 
+          child_index = 1;
+          this.actual_node = this.actual_node.childPointers[child_index];
+          stack.push(this.actual_node); 
+      } 
+      else if(key >= this.actual_node.keyvalues[1] && this.actual_node.keyvalues[2]==null && this.actual_node != null) {
+          child_index = 2;
+          this.actual_node = this.actual_node.childPointers[child_index];
+          stack.push(this.actual_node); 
+      }
+      else if (this.actual_node.keyvalues[1] <= key && key< this.actual_node.keyvalues[2]&& this.actual_node != null) { 
+          child_index = 2;
+          this.actual_node = this.actual_node.childPointers[child_index];
+          stack.push(this.actual_node); 
+      } 
+      else if (key >= this.actual_node.keyvalues[2] && this.actual_node != null) { 
+          child_index = 3;
+          this.actual_node = this.actual_node.childPointers[child_index];
+          stack.push(this.actual_node); 
+      }
+    }
+    
+    stack.reverse();
+
+    while(stack.length!=0){
+      this.searchRout = this.searchRout + '[';
+      this.actual_node = stack.pop();
+      for(let i = 0; i < this.actual_node.keyvalues.length; i++){
+        this.searchRout = this.searchRout + this.actual_node.keyvalues[i].toString();
+        if(i!=this.actual_node.keyvalues.length-1){this.searchRout = this.searchRout + ' , ';}
+      }
+      if(stack.length!=0){
+        this.searchRout = this.searchRout + '] ➜';
+      } else {
+        this.searchRout = this.searchRout + ']';
+      }
+    }
+    console.log(containKey);
+    console.log(this.searchRout);
+    this.drawTree();
 
   }
 
@@ -775,6 +1252,10 @@ export class BPlusTreeComponent implements OnInit {
 
           //we need to find the appropriate leaf_node to intesrt the key into
           while(!this.actual_node.isLeaf){
+
+            //===== Logs for checking if code is running correctly =====
+            console.log("While loop - searching for leaf node");
+            //===== Logs over =====
 
             if(key < this.actual_node.keyvalues[0] && this.actual_node != null) { 
                 child_index = 0;
@@ -901,27 +1382,80 @@ export class BPlusTreeComponent implements OnInit {
 
                     this.actual_node = stack.pop();
                     returnedNode.parentNode = this.actual_node;
+                    
+                    //===== Logs for checking if code is running correctly =====
+                    console.log("returnedNode.parentNode.keyvalues:  " + returnedNode.parentNode.keyvalues);
+                    console.log("this.actual_node:  " + this.actual_node.keyvalues); 
+                    console.log("this.actual_node.childPointers"); 
+                    if(this.actual_node.childPointers[0]!=null){console.log("child_0: " + this.actual_node.childPointers[0].keyvalues);}
+                    if(this.actual_node.childPointers[1]!=null){console.log("child_1: " + this.actual_node.childPointers[1].keyvalues);}
+                    if(this.actual_node.childPointers[2]!=null){console.log("child_2: " + this.actual_node.childPointers[2].keyvalues);}
+                    if(this.actual_node.childPointers[3]!=null){console.log("child_3: " + this.actual_node.childPointers[3].keyvalues);}
+                    //===== Logs over =====
 
                     //adjusting childPointers
-                    let tmpHashKey = returnedNode.keyvalues[0];
+                    let tmpHashKey = returnedNode.keyvalues[0]; console.log("tmpHashKey:  " + tmpHashKey);
                     let childIndex = 0;
                     let haveIndex = false;
                     while(!haveIndex){
-                      if(this.actual_node.childPointers[childIndex].keyvalues[0] > tmpHashKey){
+                      if(this.actual_node.childPointers[childIndex].keyvalues[0] > tmpHashKey){ //Error: Uncaught (in promise): TypeError: Cannot read properties of undefined (reading 'keyvalues')
+                        //===== Logs for checking if code is running correctly =====
+                        if(this.actual_node.childPointers[childIndex]!=null){
+                          console.log("this.actual_node.childPointers in WHILE");
+                          console.log(this.actual_node.childPointers[childIndex].keyvalues);
+                        }
+                        //===== Logs over =====
+                        console.log("haveIndex = true");
+                        haveIndex = true;
+                      } else if (this.actual_node.childPointers[childIndex+1]==null) {
+                        console.log("IF this.actual_node.childPointers[childIndex+1]==null");
+                        childIndex++;
                         haveIndex = true;
                       } else {
+                        console.log("childIndex++");
                         childIndex++;
                       }
                     }
                     this.actual_node.childPointers.push(null);
+
+                    //===== Logs for checking if code is running correctly =====
+                    console.log("this.actual_node:  " + this.actual_node.keyvalues); 
+                    console.log("this.actual_node.childPointers"); 
+                    if(this.actual_node.childPointers[0]!=null){console.log("child_0: " + this.actual_node.childPointers[0].keyvalues);}
+                    if(this.actual_node.childPointers[1]!=null){console.log("child_1: " + this.actual_node.childPointers[1].keyvalues);}
+                    if(this.actual_node.childPointers[2]!=null){console.log("child_2: " + this.actual_node.childPointers[2].keyvalues);}
+                    if(this.actual_node.childPointers[3]!=null){console.log("child_3: " + this.actual_node.childPointers[3].keyvalues);}
+                    console.log("this.actual_node.childPointers.length:  " + this.actual_node.childPointers.length);
+                    //===== Logs over =====
+
                     for(let i = this.actual_node.childPointers.length-1; i>=childIndex; i--){
+                      //===== Logs for checking if code is running correctly =====
+                      console.log("i: "+ i);
+                      console.log("i-1: "+ (i-1));
+                      if(this.actual_node.childPointers[i]!=null){console.log("this.actual_node.childPointers[i]: "+ this.actual_node.childPointers[i].keyvalues);}
+                      if(this.actual_node.childPointers[i-1]!=null){console.log("this.actual_node.childPointers[i-1]: "+ this.actual_node.childPointers[i-1].keyvalues);}
+                      //===== Logs over =====
                       this.actual_node.childPointers[i] = this.actual_node.childPointers[i-1];
                     }
+                    //===== Logs for checking if code is running correctly =====
+                    console.log("this.actual_node:  " + this.actual_node.keyvalues); 
+                    console.log("this.actual_node.childPointers"); 
+                    if(this.actual_node.childPointers[0]!=null){console.log("child_0: " + this.actual_node.childPointers[0].keyvalues);}
+                    if(this.actual_node.childPointers[1]!=null){console.log("child_1: " + this.actual_node.childPointers[1].keyvalues);}
+                    if(this.actual_node.childPointers[2]!=null){console.log("child_2: " + this.actual_node.childPointers[2].keyvalues);}
+                    if(this.actual_node.childPointers[3]!=null){console.log("child_3: " + this.actual_node.childPointers[3].keyvalues);}
+                    console.log("this.actual_node.childPointers.length:  " + this.actual_node.childPointers.length);
+                    //===== Logs over =====
+                    console.log("childIndex: " + childIndex);
+                    console.log("returnedNode: " + returnedNode.keyvalues);
                     this.actual_node.childPointers[childIndex] = returnedNode;
 
                     returnedValues = this.addKey(this.actual_node,key);
                     returnedNode = returnedValues[0];
                     key = returnedValues[1];
+                    //===== Logs for checking if code is running correctly =====
+                    console.log("Returns:"); if(returnedNode!=null){console.log("node: " + returnedNode.keyvalues);}else{console.log(null)} console.log("key: " + key);
+                    //===== Logs over =====
                   }
                   
                 }
@@ -982,39 +1516,44 @@ export class BPlusTreeComponent implements OnInit {
 
           //we need to find the appropriate leaf_node to delete the key from  
           while(!this.actual_node.isLeaf){
-            if(key < this.actual_node.keyvalues[0]) { 
+            
+            //===== Logs for checking if code is running correctly =====
+            console.log("While loop - searching for leaf node");
+            //===== Logs over =====
+
+            if(key < this.actual_node.keyvalues[0] && this.actual_node != null) { 
                 console.log("DELETE -> WHILE LEAF NODE -> X < A");
                 child_index = 0;
                 this.actual_node = this.actual_node.childPointers[child_index];
                 stack.push(this.actual_node); 
             } 
-            else if(key > this.actual_node.keyvalues[0] && this.actual_node.keyvalues[1]==null) 
+            else if(key >= this.actual_node.keyvalues[0] && this.actual_node.keyvalues[1]==null && this.actual_node != null) 
             {
                 console.log("DELETE -> WHILE LEAF NODE -> X >= A & NINCS B");
                 child_index = 1;
                 this.actual_node = this.actual_node.childPointers[child_index];
                 stack.push(this.actual_node); 
             }
-            else if (this.actual_node.keyvalues[0] <= key && key < this.actual_node.keyvalues[1]) { 
+            else if (this.actual_node.keyvalues[0] <= key && key < this.actual_node.keyvalues[1] && this.actual_node != null) { 
                 console.log("DELETE -> WHILE LEAF NODE -> A <= X <B");
                 child_index = 1;
                 this.actual_node = this.actual_node.childPointers[child_index];
                 stack.push(this.actual_node); 
             } 
-            else if(key > this.actual_node.keyvalues[1] && this.actual_node.keyvalues[2]==null) 
+            else if(key >= this.actual_node.keyvalues[1] && this.actual_node.keyvalues[2]==null && this.actual_node != null) 
             {
                 console.log("DELETE -> WHILE LEAF NODE ->  X >= B & NINCS C");
                 child_index = 2;
                 this.actual_node = this.actual_node.childPointers[child_index];
                 stack.push(this.actual_node); 
             }
-            else if (this.actual_node.keyvalues[1] <= key && key< this.actual_node.keyvalues[2]) { 
+            else if (this.actual_node.keyvalues[1] <= key && key< this.actual_node.keyvalues[2]&& this.actual_node != null) { 
                 console.log("DELETE -> WHILE LEAF NODE -> B <= X < C");
                 child_index = 2;
                 this.actual_node = this.actual_node.childPointers[child_index];
                 stack.push(this.actual_node); 
             } 
-            else if (key >= this.actual_node.keyvalues[2]) { 
+            else if (key >= this.actual_node.keyvalues[2] && this.actual_node != null) { 
                 console.log("DELETE -> WHILE LEAF NODE -> X >= C");
                 child_index = 3;
                 this.actual_node = this.actual_node.childPointers[child_index];
@@ -1031,12 +1570,13 @@ export class BPlusTreeComponent implements OnInit {
           this.actual_node = stack.pop();
 
           //if the key we are deleting is alone in a LEAF and it is also the root -> restart tree building 
-          if(this.actual_node.isLeaf && this.actual_node.isRoot && this.actual_node.recordnumber==1){
-            this.restart();
+          if(this.actual_node.isLeaf && this.actual_node.isRoot && this.actual_node.keyvalues.length<3){
+            console.log("isLeaf && isRoot && keyvalues.length<3");
+            this.removeKey(this.actual_node,key);
           }
 
           //if possible, steal from left sibling
-          if( this.actual_node.prevLeaf!=null && this.actual_node.prevLeaf.recordnumber==3 ){
+          if( this.actual_node.prevLeaf!=null && this.actual_node.prevLeaf.keyvalues.length==3 ){
             
             //===== Logs for checking if code is running correctly =====
             console.log("Stealing from right sibling");
@@ -1045,9 +1585,10 @@ export class BPlusTreeComponent implements OnInit {
             //the original hashKey which will be changed  
             var hashkey_to_change = this.actual_node.keyvalues[0];
 
-            //deleteing the key the user_input key
+            //deleting the key the user_input key
             const ind: number = this.actual_node.keyvalues.indexOf(key);
             this.actual_node.keyvalues.splice(ind, 1);
+            this.actual_node.recordnumber=this.actual_node.keyvalues.length;
               
             const valuesToSplit = Object.assign([]);
             for(let key of this.actual_node.keyvalues){
@@ -1091,7 +1632,7 @@ export class BPlusTreeComponent implements OnInit {
           } 
 
           //if possible, steal from right sibling
-          else if(this.actual_node.nextLeaf!=null && this.actual_node.nextLeaf.recordnumber==3){
+          else if(this.actual_node.nextLeaf!=null && this.actual_node.nextLeaf.keyvalues.length==3){
             
             //===== Logs for checking if code is running correctly =====
             console.log("Stealing from right sibling");
@@ -1100,9 +1641,10 @@ export class BPlusTreeComponent implements OnInit {
             //the original hashKey which will be changed  
             var hashkey_to_change = this.actual_node.nextLeaf.keyvalues[0];
 
-            //deleteing the key the user_input key
+            //deleting the key the user_input key
             const ind: number = this.actual_node.keyvalues.indexOf(key);
             this.actual_node.keyvalues.splice(ind, 1);
+            this.actual_node.recordnumber=this.actual_node.keyvalues.length;
 
             const valuesToSplit = Object.assign([]);
             for(let key of this.actual_node.keyvalues){
@@ -1155,7 +1697,7 @@ export class BPlusTreeComponent implements OnInit {
               //LOG FOR CHECKING
               console.log("WHILE");
               returnedValues = this.removeKey(this.actual_node, key);
-              returnedNode = returnedValues[0]; //the node after the merge
+              returnedNode = returnedValues[0]; //the node after the merge //Error: Uncaught (in promise): TypeError: Cannot read properties of undefined (reading '0')
               key = returnedValues[1];          //the hashkey which will be deleted
 
               //LOGS FOR CHECKING
@@ -1166,10 +1708,10 @@ export class BPlusTreeComponent implements OnInit {
 
               //popping out the parent node
               this.actual_node = stack.pop();
-              console.log("actual node: " + this.actual_node.keyvalues);
+              if(this.actual_node!=null){console.log("actual node: " + this.actual_node.keyvalues);}
 
               //if merge returns with a key and parent has 2 or more hashkeys
-              if(this.actual_node != null && this.actual_node.recordnumber>=2 && key != -1){
+              if(this.actual_node != null && this.actual_node.keyvalues.length>=2 && key != -1){
                 
                 console.log("!!!!!!!!!!!! parent keyvalues BEFORE !!!!!!!!!!!!");
                 console.log(this.actual_node.keyvalues);
@@ -1211,82 +1753,83 @@ export class BPlusTreeComponent implements OnInit {
               }
               
               //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! PARENT ADJUSTING IN UPPER LEVELS !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-              if (key != -1){
-                console.log("!!!!!!!!!!!!!!!!!!!!!!! KEY != -1 !!!!!!!!!!!!!!!!!!!!!!!");
+              // if (key != -1){
+                // console.log("!!!!!!!!!!!!!!!!!!!!!!! KEY != -1 !!!!!!!!!!!!!!!!!!!!!!!");
                 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!                
-                if(this.actual_node != null){
-                  console.log(" IF -> ACTUAL NODE != NULL");
-                  if(this.actual_node.keyvalues.length == 1){ 
-                    console.log(" IF -> this.actual_node.keyvalues.length = 1 => LEGYEN KEY = -1");
-                    key=-1 
-                  } else {
-                    console.log(" ELSE -> this.actual_node.keyvalues.length != 1 =>");
-                    //adjusting the key values of the parent node
-                    const ind: number = this.actual_node.keyvalues.indexOf(key);
-                    this.actual_node.keyvalues.splice(ind, 1);
-                    this.sortKeyValues(this.actual_node.keyvalues);
+                // if(this.actual_node != null){
+                //   console.log(" IF -> ACTUAL NODE != NULL");
+                //   if(this.actual_node.keyvalues.length == 1){ 
+                //     console.log(" IF -> this.actual_node.keyvalues.length = 1 => LEGYEN KEY = -1");
+                //     key=-1 
+                //   } else {
+                //     console.log(" ELSE -> this.actual_node.keyvalues.length != 1 =>");
+                //     //adjusting the key values of the parent node
+                //     const ind: number = this.actual_node.keyvalues.indexOf(key);
+                //     this.actual_node.keyvalues.splice(ind, 1);
+                //     this.sortKeyValues(this.actual_node.keyvalues);
 
-                    //adjusting childpointers
-                    var counter=0;
-                    var children_counter = [];
-                    for(let i of this.actual_node.childPointers){
-                      children_counter.push(counter);
-                      counter++;
-                    }
-                    children_counter.pop();
-                    //LOG FOR CHECKING
-                    console.log("delete -> not steal from sibling -> childpointer adjusting !!! ELSE !!!");
-                    console.log(children_counter);
+                //     //adjusting childpointers
+                //     var counter=0;
+                //     var children_counter = [];
+                //     for(let i of this.actual_node.childPointers){
+                //       children_counter.push(counter);
+                //       counter++;
+                //     }
+                //     children_counter.pop();
+                //     //LOG FOR CHECKING
+                //     console.log("delete -> not steal from sibling -> childpointer adjusting !!! ELSE !!!");
+                //     console.log(children_counter);
                     
-                    var next = this.actual_node.childPointers[0];
-                    //LOG FOR CHECKING
-                    console.log("for");
-                    for(let i in children_counter){
-                      //LOG FOR CHECKING
-                      console.log(this.actual_node.childPointers);
-                      console.log("for cycle - i");
-                      console.log(i);
-                      console.log("actual_node.childPointers[i]:");
-                      console.log(this.actual_node.childPointers[i].keyvalues);
+                //     var next = this.actual_node.childPointers[0];
+                //     //LOG FOR CHECKING
+                //     console.log("for");
+                //     for(let i in children_counter){
+                //       //LOG FOR CHECKING
+                //       console.log(this.actual_node.childPointers);
+                //       console.log("for cycle - i");
+                //       console.log(i);
+                //       console.log("actual_node.childPointers[i]:");
+                //       console.log(this.actual_node.childPointers[i].keyvalues);
 
-                      console.log("!!! BEFORE IF !!!");
-                      console.log("actual_node.childpointers[i].keyvalues LENGTH");
-                      console.log(this.actual_node.childPointers[i].keyvalues.length);
+                //       console.log("!!! BEFORE IF !!!");
+                //       console.log("actual_node.childpointers[i].keyvalues LENGTH");
+                //       console.log(this.actual_node.childPointers[i].keyvalues.length);
 
-                      if(this.actual_node.childPointers[i].keyvalues.length == 0 ){
-                        console.log("!!! IF !!! for cycle - childpointers");
-                        console.log(this.myTree);
-                        const index = this.actual_node.childPointers.indexOf(this.actual_node.childPointers[i]);
-                        console.log("childpointer index");
-                        console.log(index);
-                        let splicednode = this.actual_node.childPointers.splice(index,1);
-                        console.log("splicednode");
-                        console.log(splicednode);
-                        console.log(this.myTree);
+                //       if(this.actual_node.childPointers[i].keyvalues.length == 0 ){
+                //         console.log("!!! IF !!! for cycle - childpointers");
+                //         console.log(this.myTree);
+                //         const index = this.actual_node.childPointers.indexOf(this.actual_node.childPointers[i]);
+                //         console.log("childpointer index");
+                //         console.log(index);
+                //         let splicednode = this.actual_node.childPointers.splice(index,1);
+                //         console.log("splicednode");
+                //         console.log(splicednode);
+                //         console.log(this.myTree);
 
-                        //pointer adjusting
-                        if(this.actual_node.childPointers[i].prevLeaf != null) {
-                          this.actual_node.childPointers[i].prevLeaf.nextLeaf = this.actual_node.childPointers[i].nextLeaf
-                        }
-                        if(this.actual_node.childPointers[i].nextLeaf != null) {
-                          this.actual_node.childPointers[i].nextLeaf.prevLeaf = this.actual_node.childPointers[i].prevLeaf
-                        }
+                //         //pointer adjusting
+                //         if(this.actual_node.childPointers[i].prevLeaf != null) {
+                //           this.actual_node.childPointers[i].prevLeaf.nextLeaf = this.actual_node.childPointers[i].nextLeaf
+                //         }
+                //         if(this.actual_node.childPointers[i].nextLeaf != null) {
+                //           this.actual_node.childPointers[i].nextLeaf.prevLeaf = this.actual_node.childPointers[i].prevLeaf
+                //         }
 
-                        //LOGS FOR CHECKING
-                        for(let i=0; i < this.actual_node.childPointers.length-1; i++){
-                          console.log("ChildPointers: " + this.actual_node.childPointers[i].keyvalues);
-                          console.log("Child's parent: " + this.actual_node.childPointers[i].parentNode.keyvalues);
-                        }//END OF LOGS
+                //         //LOGS FOR CHECKING
+                //         for(let i=0; i < this.actual_node.childPointers.length-1; i++){
+                //           console.log("ChildPointers: " + this.actual_node.childPointers[i].keyvalues);
+                //           console.log("Child's parent: " + this.actual_node.childPointers[i].parentNode.keyvalues);
+                //         }//END OF LOGS
 
-                        console.log("!!! END IF !!!");
-                      }
-                    }
-                  }
-                }
-              }
+                //         console.log("!!! END IF !!!");
+                //       }
+                //     }
+                //   }
+                // }
+              // }
             }
           }
-
+      console.log("build & draw tree");
+      console.log(this.myTree.root.keyvalues);
       this.buildTree();
       this.drawTree();
 
@@ -1485,49 +2028,53 @@ export class BPlusTreeComponent implements OnInit {
   // === Creating the drawing of the tree ===
   //
   drawTree(){
+    console.log("drawTree()");
     const myDiv = document.querySelector("#center");
     myDiv.innerHTML = "";
     let nodeTable = "";
         
     //<table class="level" *ngFor="let object of myTreeBuilder; let i = index">
-    for(let i = 0; i < this.myTreeBuilder.length; i++){
-      nodeTable += '<table class="level" style="margin: auto;"><tr>'; //CLASS = LEVEL
+    if(this.myTreeBuilder!=null){
+      for(let i = 0; i < this.myTreeBuilder.length; i++){
+        nodeTable += '<table class="level" style="margin: auto;"><tr>'; //CLASS = LEVEL
 
-      // <table class="node" *ngFor="let arrays of object.array_level; let j = index" id="div0">
-      for(let j = 0; j < this.myTreeBuilder[i].array_level.length; j++){
-        nodeTable += '<td style="padding: 10px;"><table class="node" id="head' + this.myTreeBuilder[i].array_level[j].header + '">'; //CLASS = NODE
-            nodeTable += '<colgroup>';
-                for(let c = 0; c < 6; c++){ nodeTable += '<col width="8.3%"><col width="8.3%">'; }
-            nodeTable += '</colgroup>';
-            nodeTable += '<tr>';
-                if(this.myTreeBuilder[i].array_level[j].key1 != undefined){
-                  nodeTable += '<td style="border:2px solid black;" colspan=4>' + this.myTreeBuilder[i].array_level[j].key1 + '</td>';
-                } else { nodeTable += '<td style="border:2px solid black;" colspan=4></td>'; }
-                if(this.myTreeBuilder[i].array_level[j].key2 != undefined){
-                  nodeTable += '<td style="border:2px solid black;" colspan=4>' + this.myTreeBuilder[i].array_level[j].key2 + '</td>';
-                } else { nodeTable += '<td style="border:2px solid black;" colspan=4></td>'; }
-                if(this.myTreeBuilder[i].array_level[j].key3 != undefined){
-                  nodeTable += '<td style="border:2px solid black;" colspan=4>' + this.myTreeBuilder[i].array_level[j].key3 + '</td>';
-                } else { nodeTable += '<td style="border:2px solid black;" colspan=4></td>'; }
-            nodeTable += '</tr>';
-            nodeTable += '<tr>';
-                nodeTable += '<td style="border:2px solid black; color:rgb(0, 0, 0);" colspan=3 id="div' + this.ptr(i, j, 0)+ '">' + "•" + '</td>';
-                nodeTable += '<td style="border:2px solid black; color:rgb(0, 0, 0);" colspan=3 id="div' + this.ptr(i, j, 1)+ '">' + "•" + '</td>';
-                nodeTable += '<td style="border:2px solid black; color:rgb(0, 0, 0);" colspan=3 id="div' + this.ptr(i, j, 2)+ '">' + "•" + '</td>';
-                nodeTable += '<td style="border:2px solid black; color:rgb(0, 0, 0);" colspan=3 id="div' + this.ptr(i, j, 3)+ '">' + "•" + '</td>';
-            nodeTable += '</tr>';
-        nodeTable += '</table></td>'; //END OF CLASS = NODE
+        // <table class="node" *ngFor="let arrays of object.array_level; let j = index" id="div0">
+        for(let j = 0; j < this.myTreeBuilder[i].array_level.length; j++){
+          nodeTable += '<td style="padding: 10px;"><table class="node" id="head' + this.myTreeBuilder[i].array_level[j].header + '">'; //CLASS = NODE
+              nodeTable += '<colgroup>';
+                  for(let c = 0; c < 6; c++){ nodeTable += '<col width="8.3%"><col width="8.3%">'; }
+              nodeTable += '</colgroup>';
+              nodeTable += '<tr>';
+                  if(this.myTreeBuilder[i].array_level[j].key1 != undefined){
+                    nodeTable += '<td style="border:2px solid black;" colspan=4>' + this.myTreeBuilder[i].array_level[j].key1 + '</td>';
+                  } else { nodeTable += '<td style="border:2px solid black;" colspan=4></td>'; }
+                  if(this.myTreeBuilder[i].array_level[j].key2 != undefined){
+                    nodeTable += '<td style="border:2px solid black;" colspan=4>' + this.myTreeBuilder[i].array_level[j].key2 + '</td>';
+                  } else { nodeTable += '<td style="border:2px solid black;" colspan=4></td>'; }
+                  if(this.myTreeBuilder[i].array_level[j].key3 != undefined){
+                    nodeTable += '<td style="border:2px solid black;" colspan=4>' + this.myTreeBuilder[i].array_level[j].key3 + '</td>';
+                  } else { nodeTable += '<td style="border:2px solid black;" colspan=4></td>'; }
+              nodeTable += '</tr>';
+              nodeTable += '<tr>';
+                  nodeTable += '<td style="border:2px solid black; color:rgb(0, 0, 0);" colspan=3 id="div' + this.ptr(i, j, 0)+ '">' + "•" + '</td>';
+                  nodeTable += '<td style="border:2px solid black; color:rgb(0, 0, 0);" colspan=3 id="div' + this.ptr(i, j, 1)+ '">' + "•" + '</td>';
+                  nodeTable += '<td style="border:2px solid black; color:rgb(0, 0, 0);" colspan=3 id="div' + this.ptr(i, j, 2)+ '">' + "•" + '</td>';
+                  nodeTable += '<td style="border:2px solid black; color:rgb(0, 0, 0);" colspan=3 id="div' + this.ptr(i, j, 3)+ '">' + "•" + '</td>';
+              nodeTable += '</tr>';
+          nodeTable += '</table></td>'; //END OF CLASS = NODE
 
+        }
+        nodeTable += '</tr></table>'; //END OF CLASS = LEVEL
       }
-      nodeTable += '</tr></table>'; //END OF CLASS = LEVEL
+      myDiv.innerHTML += nodeTable;
+      const svg = document.querySelector("#svg");
+      svg.innerHTML = "";
+      this.line();
     }
-    myDiv.innerHTML += nodeTable;
-    const svg = document.querySelector("#svg");
-    svg.innerHTML = "";
-    this.line();
   }
 
   line(){
+    console.log("line()");
     for(let i = 1 ; i <= this.counter; i++){
       this.draw(i, i)
     }
@@ -1535,6 +2082,7 @@ export class BPlusTreeComponent implements OnInit {
 
   draw(ptr, table){
 
+    console.log("draw()");
     var x = document.querySelector("#div" + ptr);
     var y = document.querySelector("#head" + table);
 

@@ -44,6 +44,11 @@ export class RegisterFormComponent implements OnInit {
       let name = this.user.username.split(" ");
       this.person.first_name = name[1];
       this.person.last_name = name[0];
+      this.user.role="ROLE_USER";
+
+      console.log("typeof(this.users)");
+      console.log(typeof(this.user));
+      console.log(this.user);
       
       await this.persServ.createPerson(this.person);
       await this.userServ.createUser(this.user);

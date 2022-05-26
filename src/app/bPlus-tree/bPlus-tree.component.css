@@ -26,6 +26,7 @@ td.treeBox{
     float: top;
     margin: auto;
     text-align: center;
+    min-height: max-content;
 }
 
 

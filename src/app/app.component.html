@@ -1,4 +1,9 @@
-<head> <link href="https://fonts.googleapis.com/css?family=Crimson+Text&display=swap" rel="stylesheet"> </head>
+<head> 
+  <title>B+ Tree builder App</title>
+  <link href="https://fonts.googleapis.com/css?family=Crimson+Text&display=swap" rel="stylesheet">
+</head>
+
+<div class="content" style="display: none;"> <span>b-tree-client app is running!</span> </div>
 
 <mat-toolbar color="primary">
   <button mat-button href="/">
@@ -15,7 +20,7 @@
       <button mat-button routerLink="/bplus-tree/logs">
         <mat-icon>format_list_bulleted</mat-icon>
         Building process</button>
-      <button mat-button routerLink="admin" *ngIf="getRoleBoolean()">
+      <button mat-button routerLink="/admin" *ngIf="getRoleBoolean()">
         <mat-icon>gavel</mat-icon>
         Admin page</button>
       <button mat-button (click)="logout()">
@@ -54,7 +59,7 @@
     <button mat-menu-item routerLink="/bplus-tree/logs">
       <mat-icon>format_list_bulleted</mat-icon>
       Building process</button>
-    <button mat-button routerLink="admin" *ngIf="getRoleBoolean()">
+    <button mat-menu-item routerLink="/admin" *ngIf="getRoleBoolean()">
       <mat-icon>gavel</mat-icon>
       Admin page</button>
     <button mat-menu-item (click)="logout()">

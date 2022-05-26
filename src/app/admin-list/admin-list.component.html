@@ -7,15 +7,17 @@
         <thead>
           <tr>
             <th scope="col">ID</th>
-            <th scope="col">User's First name</th>
-            <th scope="col">User's Last name</th>
+            <th scope="col">User's Name</th>
+            <!--<th scope="col">User's Last name</th>-->
+            <th scope="col">Admin Status</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let person of persons">
-            <th scope="row">{{ person.id }}</th>
-            <td>{{ person.first_name }}</td>
-            <td>{{ person.last_name }}</td>
+          <tr *ngFor="let user of users">
+            <th>{{ user.id }}</th>
+            <td>{{ user.username }}</td>
+            <td *ngIf="user.role=='ROLE_ADMIN'; else elseBlock"> <button (click)="removeAdmin(user.username)" mat-flat-button type="submit" color="warn" [disabled]=currentUser(user.username)>REMOVE</button> </td> 
+            <ng-template #elseBlock><td><button (click)="addAdmin(user.username)" mat-flat-button type="submit" color="primary" [disabled]=currentUser(user.username)>ADD</button></td></ng-template>
           </tr>
         </tbody>
       </table>

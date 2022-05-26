@@ -4,10 +4,6 @@ export class Keys {
     key1:number;
     key2:number;
     key3:number;
-    child1:number;
-    child2:number;
-    child3:number;
-    child4:number;
 
     constructor(h:number, k1:number, k2:number, k3:number){
         this.header=h;

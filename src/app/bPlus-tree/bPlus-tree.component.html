@@ -32,14 +32,13 @@
         <button mat-flat-button type="submit" id="delete" value="delete"color="primary" *ngIf="validOptionIsSelected && newTree">START OVER</button>
         <!--<button mat-flat-button type="submit" id="load" value="load" color="primary" *ngIf="validOptionIsSelected && newTree">LOAD</button>-->
         <!--<button mat-flat-button type="submit" id="save" value="save"color="primary" *ngIf="validOptionIsSelected && newTree">SAVE</button>-->
-        <button mat-flat-button type="submit" id="submit" value="submit" color="primary" *ngIf="validOptionIsSelected && !newTree">GO</button>
-        
+        <button mat-flat-button type="submit" id="submit" value="submit" color="primary" *ngIf="validOptionIsSelected && !newTree">GO</button>        
       </div>
     </form>
     <br><br>
   </td>
   <td height=20px; style="background-color: rgb(245, 245, 245);">
-    <h4 style="margin-top: 9px;">Result</h4>  
+    <h4 style="margin-top: 9px;">Result</h4><br><p> {{this.searchRout}}</p>
   </td>
  </tr>
 
